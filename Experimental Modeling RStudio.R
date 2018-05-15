@@ -50,6 +50,34 @@ Donations_Linked = subset(Donations_Linked,select = names(Donations_Linked) %ni%
 
 
 
+library(recommenderlab)	 	 
+# Loading to pre-computed affinity data	 
+affinity.data<-Donations_Linked
+
+
+
+
+
+
+
+affinity.matrix<- as(affinity.data,"realRatingMatrix")
+
+
+Rec.model<-Recommender(affinity.matrix[1:5000], method = "UBCF")
+
+
+Rec.model=Recommender(affinity.data[1:400],method="UBCF", 
+                      param=list(normalize = "Z-score",method="Cosine",nn=5, minRating=1))
+
+
+
+
+
+
+
+
+
+
 categories <- Projects %>%
   select(`Project Subject Category Tree`) %>%
   mutate(`Project Subject Category Tree`=strsplit(as.character(`Project Subject Category Tree`), ",")) %>% 
