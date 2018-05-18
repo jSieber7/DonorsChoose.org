@@ -124,3 +124,53 @@ beta_spread <- lda_td %>%
   arrange(desc(dif_12))
 
 beta_spread
+
+
+
+# TOPIC MODELING
+# https://www.kaggle.com/rtatman/nlp-in-r-topic-modelling/code
+
+library(tidyverse)
+library(tidytext) 
+library(topicmodels)  
+library(tm) 
+library(SnowballC)
+
+# LDA
+
+Text_data <- read_csv('data/Projects.csv') %>%
+  select(`Project Essay`)
+
+Text_data <- Text_data[1:50000,]
+
+clean_words <-removeWords(Text_data$`Project Essay`, c('<!--donotremoveessaydivider-->','donotremoveessaydivider','--donotremoveessaydivider--',
+                                                       '<!---->')) 
+
+Text_data$`Project Essay` <- clean_words
+
+
+corpus <- Corpus(VectorSource(Text_data$`Project Essay`), readerControl=list(language="en"))
+DTM <- DocumentTermMatrix(corpus,control = list(stopwords = TRUE, minWordLength = 3, removeNumbers = TRUE, removePunctuation = TRUE)) 
+
+lda <- LDA(DTM, k = 5, control = list(seed = 42))
+topics <- tidy(lda, matrix = "beta")
+
+
+top_terms <- topics  %>% # take the topics data frame and..
+  group_by(topic) %>% # treat each topic as a different group
+  top_n(10, beta) %>% # get the top 10 most informative words
+  ungroup() %>% # ungroup
+  arrange(topic, -beta) #
+
+
+top_terms %>% # take the top terms
+  mutate(term = reorder(term, beta)) %>% # sort terms by beta value 
+  ggplot(aes(term, beta, fill = factor(topic))) + # plot beta by theme
+  geom_col(show.legend = FALSE) + # as a bar plot
+  facet_wrap(~ topic, scales = "free") + # which each topic in a seperate plot
+  labs(x = NULL, y = "Beta") + # no x label, change y label 
+  coord_flip() 
+
+
+
+
